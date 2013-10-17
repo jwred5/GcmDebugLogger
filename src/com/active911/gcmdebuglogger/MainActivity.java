@@ -52,6 +52,10 @@ public class MainActivity extends Activity implements OnClickListener{
 	private static boolean logsSent = false;
 	
 	private static final String API_LOCATION = "";
+	private static final String KEYSTORE_PASSWORD = "";
+	private static final boolean SELF_SIGNED_DESTINATION = true;
+	
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -90,31 +94,37 @@ public class MainActivity extends Activity implements OnClickListener{
 		}
 		logsSent = true;
 		appendOutput("Test Complete.  Sending Logs");
+		final HttpClient client;
 		
-		//Trust our self-signed cert
-		KeyStore localTrustStore;
-		SchemeRegistry schemeRegistry = new SchemeRegistry();
-		try {
-			localTrustStore = KeyStore.getInstance("BKS");
-			InputStream in = _instance.getResources().openRawResource(R.raw.cacerts);
-			localTrustStore.load(in, "password".toCharArray());
-
-			schemeRegistry.register(new Scheme("http", PlainSocketFactory
-			                .getSocketFactory(), 80));
-			SSLSocketFactory sslSocketFactory = new SSLSocketFactory(localTrustStore);
-			schemeRegistry.register(new Scheme("https", sslSocketFactory, 443));
-		} catch (KeyStoreException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (Exception e) {
-			appendOutput("Could not connect to active911 server. Connection not secure.");
-			e.printStackTrace();
-		} 
-		HttpParams p = new BasicHttpParams();
-		ClientConnectionManager cm = 
-		    new ThreadSafeClientConnManager(p, schemeRegistry);
-
-		final HttpClient client = new DefaultHttpClient(cm, p); 
+		if(SELF_SIGNED_DESTINATION){
+			//Trust our self-signed cert
+			KeyStore localTrustStore;
+			SchemeRegistry schemeRegistry = new SchemeRegistry();
+			try {
+				localTrustStore = KeyStore.getInstance("BKS");
+				InputStream in = _instance.getResources().openRawResource(R.raw.cacerts);
+				localTrustStore.load(in, KEYSTORE_PASSWORD.toCharArray());
+	
+				schemeRegistry.register(new Scheme("http", PlainSocketFactory
+				                .getSocketFactory(), 80));
+				SSLSocketFactory sslSocketFactory = new SSLSocketFactory(localTrustStore);
+				schemeRegistry.register(new Scheme("https", sslSocketFactory, 443));
+			} catch (KeyStoreException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (Exception e) {
+				appendOutput("Could not connect to active911 server. Connection not secure.");
+				e.printStackTrace();
+			} 
+			HttpParams p = new BasicHttpParams();
+			ClientConnectionManager cm = 
+			    new ThreadSafeClientConnManager(p, schemeRegistry);
+	
+			client = new DefaultHttpClient(cm, p); 
+		}
+		else{
+			client = new DefaultHttpClient();
+		}
 		final HttpPost post = new HttpPost(API_LOCATION);
 		String log = grabLog();
 		if(log == null){
@@ -165,7 +175,7 @@ public class MainActivity extends Activity implements OnClickListener{
 	}
 	private static String grabLog(){
 		try {
-			Process process = Runtime.getRuntime().exec("logcat -d");
+			Process process = Runtime.getRuntime().exec("logcat -d -v time");
 			BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
 			StringBuilder log=new StringBuilder();
