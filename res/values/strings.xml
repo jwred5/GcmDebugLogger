@@ -1,0 +1,8 @@
+<resources>
+
+    <string name="app_name">GcmDebugLogger</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="welcome">Welcome.  This test will try to connect you to GCM and send the following to Active911:\n1) Device Id\n2) Email address\n3) A log of your activity for up to the past 1-2 hours.\nIf this is ok with you, press "Start Test" to begin.</string>
+
+</resources>
